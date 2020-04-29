@@ -1,6 +1,6 @@
 Group Meeting April
 ==========================
-author: Miguel Angel García Campos
+author: Miguel Angel Garcia Campos
 date: April 27th, 2020
 width: 1980
 height: 1200
@@ -9,7 +9,7 @@ autosize: true
 # Outline:
 
 ## 1) txtools. A package and an abridged demo.
-### 2) Using txtools. An assesment of m6A-seq single-nucleotide detection potential
+### 2) ???
 
 ========================================================
 # txtools
@@ -120,7 +120,8 @@ call to `tx_reads()`.
 *GenomicRanges* the core object of their homonymous package, but their 
 coordinates belong now to the transcriptomic references used. 
 
-- In this way we can take advantage of **GenomicRanges** functions and accesors to retrieve information from the mappings, and manipulate them.
+- In this way we can take advantage of **GenomicRanges** functions and accesors 
+to retrieve information from the mappings, and manipulate them.
 
 --- 
 
@@ -329,7 +330,7 @@ barplot(resTab3[[iGene]]$cov, main = paste(iGene, "Coverage"),
         ylab = "Counts", xlab = iGene)
 ```
 
-![plot of chunk unnamed-chunk-8](groupMeeting-figure/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](txtools_demo-figure/unnamed-chunk-8-1.png)
 
 ---
 
@@ -343,7 +344,7 @@ barplot(t(data.frame(resTab3[[iGene]][,c("A", "T", "G", "C", "N")])),
         main = paste("Nucleotide Frequency"), ylab = "Counts", xlab = iGene)
 ```
 
-![plot of chunk unnamed-chunk-9](groupMeeting-figure/unnamed-chunk-9-1.png)
+![plot of chunk unnamed-chunk-9](txtools_demo-figure/unnamed-chunk-9-1.png)
 
 ================
 # Adding the reference sequence to the DT
