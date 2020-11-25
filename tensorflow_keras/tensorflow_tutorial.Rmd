@@ -1,0 +1,325 @@
+---
+title: "tensorflow tutorials"
+author: "Miguel A. García-Campos"
+output:
+  github_document: default
+  BiocStyle::html_document:
+    code_folding: show
+    toc: TRUE 
+    toc_float: TRUE
+    df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, Global Options, echo = F}
+knitr::opts_chunk$set(warning = F, message = F)
+```
+
+# Description
+
+This notebook presents machine-learning examples using tensorflow/keras 
+as infrastructure to create and train neural networks.
+
+# Setup: Packages and functions
+
+Loading local functions and external packages
+```{r, packages, functions and default values, message = FALSE}
+tStart <- Sys.time()
+source("http://bit.ly/rnaMods") # Load my functions
+# source("local_funs.R")
+CRAN_packs <- c("parallel", "keras", "tidyverse")
+invisible(sapply(CRAN_packs, installLoad_CRAN))
+# BIOC_packs <- c("")
+# invisible(sapply(BIOC_packs, installLoad_BioC))
+nCores <- 10 # Number of cores used in multi-core functions
+```
+
+# Categorical Classification from continuous variables - Iris dataset
+
+This example is published by **leonjessen** in their github repo 
+[keras_tensorflow_on_iris](https://github.com/leonjessen/keras_tensorflow_on_iris)
+
+----
+
+**Building a simple neural network using Keras and Tensorflow**
+
+A minimal example for building your first simple artificial neural network 
+using [Keras and TensorFlow for R](https://tensorflow.rstudio.com/keras/) - 
+Right, let's get to it!
+
+## Data
+
+[The famous Iris flower data set](https://en.wikipedia.org/wiki/Iris_flower_data_set) 
+contains data to quantify the morphologic variation of Iris flowers of three 
+related species. In other words - A total of 150 observations of 4 input 
+features `Sepal.Length`, `Sepal.Width`, `Petal.Length` and `Petal.Width` and 
+3 output classes `setosa` `versicolor` and `virginica`, with 50 observations 
+in each class. The distributions of the feature values looks like so:
+
+```{r}
+iris %>% as_tibble %>% gather(feature, value, -Species) %>%
+  ggplot(aes(x = feature, y = value, fill = Species)) +
+  geom_violin(alpha = 0.5, scale = "width", position = position_dodge(width = 0.9)) +
+  geom_boxplot(alpha = 0.5, width = 0.2, position = position_dodge(width = 0.9)) +
+  theme_bw() + ggtitle("Iris dataset")
+```
+
+## Aim
+
+Our aim is to connect the 4 input features (`Sepal.Length`, `Sepal.Width`, 
+`Petal.Length` and `Petal.Width`) to the correct output class (`setosa` 
+`versicolor` and `virginica`) using an artificial neural network. For this 
+task, we have chosen the following simple architecture with one input layer 
+with 4 neurons (one for each feature), one hidden layer with 4 neurons and one 
+output layer with 3 neurons (one for each class), all fully connected:
+
+
+Our artificial neural network will have a total of 35 parameters: 4 for each input neuron connected to the hidden layer, plus an additional 4 for the associated first bias neuron and 3 for each of the hidden neurons connected to the output layer, plus an additional 3 for the associated second bias neuron. I.e. (4 x 4)+
+4 + (4 x 3) + 3 = 35
+
+
+## Prepare data
+
+We start with slightly wrangling the iris data set by renaming and scaling the
+features and converting character labels to numeric:
+
+```{r}
+nn_dat = iris %>% as_tibble %>%
+  mutate(sepal_l_feat = scale(Sepal.Length),
+         sepal_w_feat = scale(Sepal.Width),
+         petal_l_feat = scale(Petal.Length),
+         petal_w_feat = scale(Petal.Width),          
+         class_num    = as.numeric(Species) - 1, # factor, so = 0, 1, 2
+         class_label  = Species) %>%
+  select(contains("feat"), class_num, class_label)
+nn_dat %>% head(3)
+```
+
+Then, we split the iris data into a training and a test data set, setting aside
+20% of the data for left out data partition, to be used for final performance 
+evaluation:
+
+```{r}
+set.seed(2021)
+test_f = 0.20
+nn_dat = nn_dat %>%
+  mutate(partition = sample(c('train','test'), nrow(.), replace = TRUE, 
+                            prob = c(1 - test_f, test_f)))
+```
+
+Based on the partition, we can now create training and test data
+
+```{r}
+x_train = nn_dat %>% filter(partition == 'train') %>% select(contains("feat")) %>% as.matrix
+y_train = nn_dat %>% filter(partition == 'train') %>% pull(class_num) %>% to_categorical(3)
+x_test  = nn_dat %>% filter(partition == 'test')  %>% select(contains("feat")) %>% as.matrix
+y_test  = nn_dat %>% filter(partition == 'test')  %>% pull(class_num) %>% to_categorical(3)
+```
+
+## Set Architecture
+
+With the data in place, we now set the architecture of our artificical neural 
+network:
+
+```{r}
+model <- keras_model_sequential()
+model %>% 
+  layer_dense(units = 4, activation = 'relu', input_shape = 4) %>% 
+  layer_dense(units = 3, activation = 'softmax')
+model %>% summary
+```
+
+As expected we see 35 trainable parameters. Next, the architecture set in the 
+model needs to be compiled:
+
+```{r}
+model %>% compile(
+  loss      = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics   = c('accuracy')
+)
+```
+
+## Train the Artificial Neural Network
+
+Lastly we fit the model and save the training progress in the `history` object:
+
+```{r}
+history <- fit(model,
+               x = x_train, y = y_train,
+               epochs           = 200,
+               batch_size       = 20,
+               validation_split = 0,
+               verbose = F)
+plot(history)
+```
+
+## Evaluate Network Performance
+
+The final performance can be obtained like so:
+
+```{r}
+perf = model %>% evaluate(x_test, y_test)
+print(perf)
+```
+
+Then we can augment the `nn_dat` for plotting:
+
+```{r}
+plot_dat = nn_dat %>% filter(partition == 'test') %>%
+  mutate(class_num = factor(class_num),
+         y_pred    = factor(predict_classes(model, x_test)),
+         Correct   = factor(ifelse(class_num == y_pred, "Yes", "No")))
+plot_dat %>% select(-contains("feat")) %>% head(3)
+```
+
+and lastly, we can visualize the confusion matrix like so:
+
+```{r}
+title     = "Classification Performance of Artificial Neural Network"
+sub_title = str_c("Accuracy = ", round(perf["accuracy"], 3) * 100, "%")
+x_lab     = "True iris class"
+y_lab     = "Predicted iris class"
+ggplot(plot_dat, aes(x = class_num, y = y_pred, colour = Correct)) +
+  geom_jitter(height = 0.25, width = 0.25) +
+  scale_x_discrete(labels = levels(nn_dat$class_label)) +
+  scale_y_discrete(labels = levels(nn_dat$class_label)) +
+  theme_bw() +
+  labs(title = title, subtitle = sub_title, x = x_lab, y = y_lab)
+```
+
+## Conclusion
+
+Here, we created a 3-class predictor with an accuracy of 100% on a left out 
+data partition. I hope this little post illustrated how you can get started 
+building artificial neural network using 
+[Keras and TensorFlow in R](https://keras.rstudio.com/). This was a basic 
+minimal example. It should be noted that the network can be expanded to create
+full deep Learning networks and furthermore, the entire TensorFlow API is 
+available. It also goes to show how important it is for a data scientist, that 
+the tools needed to go efficiently from idea to implementation is available - 
+Available and accessible technology is the cornerstone of modern data science.
+
+# Image Classifier - Hand-written numbers
+
+This first example is from Rstudio tensorflow's package presentation 
+[site](https://tensorflow.rstudio.com/tutorials/beginners/)
+
+Let’s start by loading and preparing the MNIST dataset. The values of thee
+pixels are integers between 0 and 255 and we will convert them to floats 
+between 0 and 1.
+
+```{r}
+mnist <- dataset_mnist()
+mnist$train$x <- mnist$train$x/255
+mnist$test$x <- mnist$test$x/255
+```
+
+Now, let’s define the a Keras model using the sequential API.
+
+```{r}
+model <- keras_model_sequential() %>% 
+  layer_flatten(input_shape = c(28, 28)) %>% 
+  layer_dense(units = 128, activation = "relu") %>% 
+  layer_dropout(0.2) %>% 
+  layer_dense(10, activation = "softmax")
+```
+
+
+**Note** that when using the Sequential API the first layer must specify the 
+input_shape argument which represents the dimensions of the input. In our case,
+images 28x28.
+
+After defining the model, you can see information about layers, number of 
+parameters, etc with the summary function:
+
+```{r}
+summary(model)
+```
+
+The next step after building the model is to compile it. It’s at compile time
+that we define what loss will be optimized and what optimizer will be used.
+You can also specify metrics, callbacks and etc that are meant to be run during
+the model fitting.
+
+Compiling is done with the compile function:
+
+```{r}
+model %>% 
+  compile(
+    loss = "sparse_categorical_crossentropy",
+    optimizer = "adam",
+    metrics = "accuracy"
+  )
+```
+
+Note that compile and fit (which we are going to see next) modify the model 
+object in place, unlike most R functions.
+
+Now let’s fit our model:
+
+```{r}
+model %>% 
+  fit(
+    x = mnist$train$x, y = mnist$train$y,
+    epochs = 5,
+    validation_split = 0.3,
+    verbose = 2
+  )
+```
+
+We can now make predictions with our model using the predict function:
+
+```{r}
+predictions <- predict(model, mnist$test$x)
+head(predictions, 2)
+```
+
+By default predict will return the output of the last Keras layer. In our case
+this is the probability for each class. You can also use predict_classes and 
+predict_proba to generate class and probability - these functions are slightly 
+different then predict since they will be run in batches.
+
+You can access the model performance on a different dataset using the evaluate 
+function, for example:
+
+```{r}
+model %>% 
+  evaluate(mnist$test$x, mnist$test$y, verbose = 0)
+```
+
+Our model achieved ~90% accuracy on the test set.
+
+Unlike models built with the lm function, to save Keras models for later 
+prediction, you need to use specialized functions, like save_model_tf:
+
+```{r}
+save_model_tf(object = model, filepath = "model")
+```
+
+You can then reload the model and make predictions with:
+
+```{r}
+reloaded_model <- load_model_tf("model")
+all.equal(predict(model, mnist$test$x), predict(reloaded_model, mnist$test$x))
+```
+
+
+# Notebook info
+
+## Warnings 
+
+```{r}
+warnings()
+```
+## Session Info
+```{r}
+sessionInfo()
+```
+## Time to knit
+```{r}
+tEnd <- Sys.time()
+tDif <- tEnd - tStart
+cat("Time to knit notebook:", round(tDif, 2), units(tDif))
+```
