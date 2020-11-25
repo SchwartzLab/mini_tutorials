@@ -201,6 +201,8 @@ available. It also goes to show how important it is for a data scientist, that
 the tools needed to go efficiently from idea to implementation is available - 
 Available and accessible technology is the cornerstone of modern data science.
 
+
+
 # Image Classifier - Hand-written numbers
 
 This first example is from Rstudio tensorflow's package presentation 
@@ -225,7 +227,6 @@ model <- keras_model_sequential() %>%
   layer_dropout(0.2) %>% 
   layer_dense(10, activation = "softmax")
 ```
-
 
 **Note** that when using the Sequential API the first layer must specify the 
 input_shape argument which represents the dimensions of the input. In our case,

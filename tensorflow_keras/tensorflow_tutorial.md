@@ -2,6 +2,11 @@ tensorflow tutorials
 ================
 Miguel A. García-Campos
 
+# Description
+
+This notebook presents machine-learning examples using tensorflow/keras
+as infrastructure to create and train neural networks.
+
 # Setup: Packages and functions
 
 Loading local functions and external packages
@@ -16,139 +21,6 @@ invisible(sapply(CRAN_packs, installLoad_CRAN))
 # invisible(sapply(BIOC_packs, installLoad_BioC))
 nCores <- 10 # Number of cores used in multi-core functions
 ```
-
-# Quickstart - Hand-written numbers Image Classifier
-
-This first example is from Rstudio tensorflow’s package presentation
-[site](https://tensorflow.rstudio.com/tutorials/beginners/)
-
-Let’s start by loading and preparing the MNIST dataset. The values of
-thee pixels are integers between 0 and 255 and we will convert them to
-floats between 0 and 1.
-
-``` r
-mnist <- dataset_mnist()
-mnist$train$x <- mnist$train$x/255
-mnist$test$x <- mnist$test$x/255
-```
-
-Now, let’s define the a Keras model using the sequential API.
-
-``` r
-model <- keras_model_sequential() %>% 
-  layer_flatten(input_shape = c(28, 28)) %>% 
-  layer_dense(units = 128, activation = "relu") %>% 
-  layer_dropout(0.2) %>% 
-  layer_dense(10, activation = "softmax")
-```
-
-**Note** that when using the Sequential API the first layer must specify
-the input\_shape argument which represents the dimensions of the input.
-In our case, images 28x28.
-
-After defining the model, you can see information about layers, number
-of parameters, etc with the summary function:
-
-``` r
-summary(model)
-```
-
-    ## Model: "sequential"
-    ## ________________________________________________________________________________
-    ## Layer (type)                        Output Shape                    Param #     
-    ## ================================================================================
-    ## flatten (Flatten)                   (None, 784)                     0           
-    ## ________________________________________________________________________________
-    ## dense_1 (Dense)                     (None, 128)                     100480      
-    ## ________________________________________________________________________________
-    ## dropout (Dropout)                   (None, 128)                     0           
-    ## ________________________________________________________________________________
-    ## dense (Dense)                       (None, 10)                      1290        
-    ## ================================================================================
-    ## Total params: 101,770
-    ## Trainable params: 101,770
-    ## Non-trainable params: 0
-    ## ________________________________________________________________________________
-
-The next step after building the model is to compile it. It’s at compile
-time that we define what loss will be optimized and what optimizer will
-be used. You can also specify metrics, callbacks and etc that are meant
-to be run during the model fitting.
-
-Compiling is done with the compile function:
-
-``` r
-model %>% 
-  compile(
-    loss = "sparse_categorical_crossentropy",
-    optimizer = "adam",
-    metrics = "accuracy"
-  )
-```
-
-Note that compile and fit (which we are going to see next) modify the
-model object in place, unlike most R functions.
-
-Now let’s fit our model:
-
-``` r
-model %>% 
-  fit(
-    x = mnist$train$x, y = mnist$train$y,
-    epochs = 5,
-    validation_split = 0.3,
-    verbose = 2
-  )
-```
-
-We can now make predictions with our model using the predict function:
-
-``` r
-predictions <- predict(model, mnist$test$x)
-head(predictions, 2)
-```
-
-    ##              [,1]         [,2]         [,3]         [,4]         [,5]
-    ## [1,] 5.571829e-06 3.395317e-08 1.620403e-05 0.0032803221 8.556255e-11
-    ## [2,] 3.591427e-08 3.104922e-03 9.968432e-01 0.0000401851 3.473811e-13
-    ##              [,6]         [,7]         [,8]         [,9]        [,10]
-    ## [1,] 3.019763e-06 7.114739e-11 9.966075e-01 2.182557e-06 8.512371e-05
-    ## [2,] 7.689028e-06 3.986572e-07 6.620288e-12 3.698268e-06 6.586857e-13
-
-By default predict will return the output of the last Keras layer. In
-our case this is the probability for each class. You can also use
-predict\_classes and predict\_proba to generate class and probability -
-these functions are slightly different then predict since they will be
-run in batches.
-
-You can access the model performance on a different dataset using the
-evaluate function, for example:
-
-``` r
-model %>% 
-  evaluate(mnist$test$x, mnist$test$y, verbose = 0)
-```
-
-    ##      loss  accuracy 
-    ## 0.0813971 0.9731000
-
-Our model achieved \~90% accuracy on the test set.
-
-Unlike models built with the lm function, to save Keras models for later
-prediction, you need to use specialized functions, like save\_model\_tf:
-
-``` r
-save_model_tf(object = model, filepath = "model")
-```
-
-You can then reload the model and make predictions with:
-
-``` r
-reloaded_model <- load_model_tf("model")
-all.equal(predict(model, mnist$test$x), predict(reloaded_model, mnist$test$x))
-```
-
-    ## [1] TRUE
 
 # Categorical Classification from continuous variables - Iris dataset
 
@@ -182,7 +54,7 @@ iris %>% as_tibble %>% gather(feature, value, -Species) %>%
   theme_bw() + ggtitle("Iris dataset")
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ## Aim
 
@@ -259,13 +131,13 @@ model %>%
 model %>% summary
 ```
 
-    ## Model: "sequential_1"
+    ## Model: "sequential"
     ## ________________________________________________________________________________
     ## Layer (type)                        Output Shape                    Param #     
     ## ================================================================================
-    ## dense_3 (Dense)                     (None, 4)                       20          
+    ## dense_1 (Dense)                     (None, 4)                       20          
     ## ________________________________________________________________________________
-    ## dense_2 (Dense)                     (None, 3)                       15          
+    ## dense (Dense)                       (None, 3)                       15          
     ## ================================================================================
     ## Total params: 35
     ## Trainable params: 35
@@ -298,7 +170,7 @@ history <- fit(model,
 plot(history)
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ## Evaluate Network Performance
 
@@ -310,7 +182,7 @@ print(perf)
 ```
 
     ##      loss  accuracy 
-    ## 0.1154859 0.9729730
+    ## 0.1480854 1.0000000
 
 Then we can augment the `nn_dat` for plotting:
 
@@ -344,7 +216,7 @@ ggplot(plot_dat, aes(x = class_num, y = y_pred, colour = Correct)) +
   labs(title = title, subtitle = sub_title, x = x_lab, y = y_lab)
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## Conclusion
 
@@ -358,6 +230,139 @@ available. It also goes to show how important it is for a data
 scientist, that the tools needed to go efficiently from idea to
 implementation is available - Available and accessible technology is the
 cornerstone of modern data science.
+
+# Image Classifier - Hand-written numbers
+
+This first example is from Rstudio tensorflow’s package presentation
+[site](https://tensorflow.rstudio.com/tutorials/beginners/)
+
+Let’s start by loading and preparing the MNIST dataset. The values of
+thee pixels are integers between 0 and 255 and we will convert them to
+floats between 0 and 1.
+
+``` r
+mnist <- dataset_mnist()
+mnist$train$x <- mnist$train$x/255
+mnist$test$x <- mnist$test$x/255
+```
+
+Now, let’s define the a Keras model using the sequential API.
+
+``` r
+model <- keras_model_sequential() %>% 
+  layer_flatten(input_shape = c(28, 28)) %>% 
+  layer_dense(units = 128, activation = "relu") %>% 
+  layer_dropout(0.2) %>% 
+  layer_dense(10, activation = "softmax")
+```
+
+**Note** that when using the Sequential API the first layer must specify
+the input\_shape argument which represents the dimensions of the input.
+In our case, images 28x28.
+
+After defining the model, you can see information about layers, number
+of parameters, etc with the summary function:
+
+``` r
+summary(model)
+```
+
+    ## Model: "sequential_1"
+    ## ________________________________________________________________________________
+    ## Layer (type)                        Output Shape                    Param #     
+    ## ================================================================================
+    ## flatten (Flatten)                   (None, 784)                     0           
+    ## ________________________________________________________________________________
+    ## dense_3 (Dense)                     (None, 128)                     100480      
+    ## ________________________________________________________________________________
+    ## dropout (Dropout)                   (None, 128)                     0           
+    ## ________________________________________________________________________________
+    ## dense_2 (Dense)                     (None, 10)                      1290        
+    ## ================================================================================
+    ## Total params: 101,770
+    ## Trainable params: 101,770
+    ## Non-trainable params: 0
+    ## ________________________________________________________________________________
+
+The next step after building the model is to compile it. It’s at compile
+time that we define what loss will be optimized and what optimizer will
+be used. You can also specify metrics, callbacks and etc that are meant
+to be run during the model fitting.
+
+Compiling is done with the compile function:
+
+``` r
+model %>% 
+  compile(
+    loss = "sparse_categorical_crossentropy",
+    optimizer = "adam",
+    metrics = "accuracy"
+  )
+```
+
+Note that compile and fit (which we are going to see next) modify the
+model object in place, unlike most R functions.
+
+Now let’s fit our model:
+
+``` r
+model %>% 
+  fit(
+    x = mnist$train$x, y = mnist$train$y,
+    epochs = 5,
+    validation_split = 0.3,
+    verbose = 2
+  )
+```
+
+We can now make predictions with our model using the predict function:
+
+``` r
+predictions <- predict(model, mnist$test$x)
+head(predictions, 2)
+```
+
+    ##              [,1]         [,2]         [,3]         [,4]         [,5]
+    ## [1,] 1.801528e-07 3.383665e-09 6.293833e-06 1.461414e-04 1.546005e-10
+    ## [2,] 8.560576e-08 1.359207e-04 9.997715e-01 9.090851e-05 9.306498e-12
+    ##              [,6]         [,7]         [,8]         [,9]        [,10]
+    ## [1,] 1.921820e-07 2.801314e-12 9.998441e-01 2.052107e-07 2.877850e-06
+    ## [2,] 5.400724e-08 2.413190e-07 1.503159e-10 1.185691e-06 1.127817e-10
+
+By default predict will return the output of the last Keras layer. In
+our case this is the probability for each class. You can also use
+predict\_classes and predict\_proba to generate class and probability -
+these functions are slightly different then predict since they will be
+run in batches.
+
+You can access the model performance on a different dataset using the
+evaluate function, for example:
+
+``` r
+model %>% 
+  evaluate(mnist$test$x, mnist$test$y, verbose = 0)
+```
+
+    ##       loss   accuracy 
+    ## 0.08321846 0.97430003
+
+Our model achieved \~90% accuracy on the test set.
+
+Unlike models built with the lm function, to save Keras models for later
+prediction, you need to use specialized functions, like save\_model\_tf:
+
+``` r
+save_model_tf(object = model, filepath = "model")
+```
+
+You can then reload the model and make predictions with:
+
+``` r
+reloaded_model <- load_model_tf("model")
+all.equal(predict(model, mnist$test$x), predict(reloaded_model, mnist$test$x))
+```
+
+    ## [1] TRUE
 
 # Notebook info
 
@@ -443,4 +448,4 @@ tDif <- tEnd - tStart
 cat("Time to knit notebook:", round(tDif, 2), units(tDif))
 ```
 
-    ## Time to knit notebook: 34.58 secs
+    ## Time to knit notebook: 35.09 secs
