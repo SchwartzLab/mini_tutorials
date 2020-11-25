@@ -7,5 +7,5 @@ An R package to build and train models using Neural Networks
 
 Examples shown:
 
-	* Classification using continuous variables (iris dataset)
-	* Image recognition (MNIST dataset - handwritten numbers)
+* Classification using continuous variables (iris dataset)
+* Image recognition (MNIST dataset - handwritten numbers)
