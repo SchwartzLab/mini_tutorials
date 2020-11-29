@@ -16,28 +16,67 @@ editor_options:
 knitr::opts_chunk$set(warning = F, message = F)
 ```
 
-# Description
+# Description of tutorial
 
 This notebook presents machine-learning examples using tensorflow/keras 
-as infrastructure to create and train neural networks.
+as infrastructure to create and train neural networks. **It is required that**
+**tensorflow is correctly installed before running the examples**, for this,
+follow this [link](https://tensorflow.rstudio.com/installation/), and follow 
+the instructions, also copied bellow.
+
+# Tensor Flow installation
+
+First, install the tensorflow R package from GitHub as follows:
+
+```{r, eval = FALSE}
+install.packages("tensorflow")
+```
+
+Then, use the install_tensorflow() function to install TensorFlow. Note that on
+Windows you need a working installation of Anaconda.
+
+```{r, eval = FALSE}
+library(tensorflow)
+install_tensorflow()
+```
+
+You can confirm that the installation succeeded with:
+
+```{r, eval = FALSE}
+library(tensorflow)
+tf$constant("Hellow Tensorflow")
+#> tf.Tensor(b'Hellow Tensorflow', shape=(), dtype=string)
+```
+
+This will provide you with a default installation of TensorFlow suitable for 
+use with the tensorflow R package. Read on if you want to learn about additional
+installation options, including installing a version of TensorFlow that takes 
+advantage of NVidia GPUs if you have the correct CUDA libraries installed
 
 # Setup: Packages and functions
 
-Loading local functions and external packages
+We will load the packages: 
+
+* parallel
+* keras
+* tidyverse
+
 ```{r, packages, functions and default values, message = FALSE}
 tStart <- Sys.time()
-source("http://bit.ly/rnaMods") # Load my functions
-# source("local_funs.R")
+installLoad_CRAN <- function(package){
+    if (!require(package, character.only = T)) {
+        install.packages(package, dependencies = TRUE, 
+                         repos = "http://cran.us.r-project.org")
+        library(package, character.only = T, quietly = T)
+    }
+}
 CRAN_packs <- c("parallel", "keras", "tidyverse")
 invisible(sapply(CRAN_packs, installLoad_CRAN))
-# BIOC_packs <- c("")
-# invisible(sapply(BIOC_packs, installLoad_BioC))
-nCores <- 10 # Number of cores used in multi-core functions
 ```
 
 # Categorical Classification from continuous variables - Iris dataset
 
-This example is published by **leonjessen** in their github repo 
+This example is published by **leonjessen** in his github repo 
 [keras_tensorflow_on_iris](https://github.com/leonjessen/keras_tensorflow_on_iris)
 
 ----
@@ -147,8 +186,9 @@ Lastly we fit the model and save the training progress in the `history` object:
 
 ```{r}
 history <- fit(model,
-               x = x_train, y = y_train,
-               epochs           = 200,
+               x = x_train,
+               y = y_train,
+               epochs           = 250,
                batch_size       = 20,
                validation_split = 0,
                verbose = F)

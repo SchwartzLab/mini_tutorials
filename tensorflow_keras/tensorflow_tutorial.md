@@ -2,29 +2,71 @@ tensorflow tutorials
 ================
 Miguel A. García-Campos
 
-# Description
+# Description of tutorial
 
 This notebook presents machine-learning examples using tensorflow/keras
-as infrastructure to create and train neural networks.
+as infrastructure to create and train neural networks. **It is required
+that** **tensorflow is correctly installed before running the
+examples**, for this, follow this
+[link](https://tensorflow.rstudio.com/installation/), and follow the
+instructions, also copied bellow.
+
+# Tensor Flow installation
+
+First, install the tensorflow R package from GitHub as follows:
+
+``` r
+install.packages("tensorflow")
+```
+
+Then, use the install\_tensorflow() function to install TensorFlow. Note
+that on Windows you need a working installation of Anaconda.
+
+``` r
+library(tensorflow)
+install_tensorflow()
+```
+
+You can confirm that the installation succeeded with:
+
+``` r
+library(tensorflow)
+tf$constant("Hellow Tensorflow")
+#> tf.Tensor(b'Hellow Tensorflow', shape=(), dtype=string)
+```
+
+This will provide you with a default installation of TensorFlow suitable
+for use with the tensorflow R package. Read on if you want to learn
+about additional installation options, including installing a version of
+TensorFlow that takes advantage of NVidia GPUs if you have the correct
+CUDA libraries installed
 
 # Setup: Packages and functions
 
-Loading local functions and external packages
+We will load the packages:
+
+  - parallel
+  - keras
+  - tidyverse
+
+<!-- end list -->
 
 ``` r
 tStart <- Sys.time()
-source("http://bit.ly/rnaMods") # Load my functions
-# source("local_funs.R")
+installLoad_CRAN <- function(package){
+    if (!require(package, character.only = T)) {
+        install.packages(package, dependencies = TRUE, 
+                         repos = "http://cran.us.r-project.org")
+        library(package, character.only = T, quietly = T)
+    }
+}
 CRAN_packs <- c("parallel", "keras", "tidyverse")
 invisible(sapply(CRAN_packs, installLoad_CRAN))
-# BIOC_packs <- c("")
-# invisible(sapply(BIOC_packs, installLoad_BioC))
-nCores <- 10 # Number of cores used in multi-core functions
 ```
 
 # Categorical Classification from continuous variables - Iris dataset
 
-This example is published by **leonjessen** in their github repo
+This example is published by **leonjessen** in his github repo
 [keras\_tensorflow\_on\_iris](https://github.com/leonjessen/keras_tensorflow_on_iris)
 
 -----
@@ -54,7 +96,7 @@ iris %>% as_tibble %>% gather(feature, value, -Species) %>%
   theme_bw() + ggtitle("Iris dataset")
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ## Aim
 
@@ -170,7 +212,7 @@ history <- fit(model,
 plot(history)
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## Evaluate Network Performance
 
@@ -182,7 +224,7 @@ print(perf)
 ```
 
     ##      loss  accuracy 
-    ## 0.1480854 1.0000000
+    ## 0.1091032 0.9729730
 
 Then we can augment the `nn_dat` for plotting:
 
@@ -216,7 +258,7 @@ ggplot(plot_dat, aes(x = class_num, y = y_pred, colour = Correct)) +
   labs(title = title, subtitle = sub_title, x = x_lab, y = y_lab)
 ```
 
-![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](tensorflow_tutorial_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ## Conclusion
 
@@ -323,11 +365,11 @@ head(predictions, 2)
 ```
 
     ##              [,1]         [,2]         [,3]         [,4]         [,5]
-    ## [1,] 1.801528e-07 3.383665e-09 6.293833e-06 1.461414e-04 1.546005e-10
-    ## [2,] 8.560576e-08 1.359207e-04 9.997715e-01 9.090851e-05 9.306498e-12
+    ## [1,] 2.041668e-07 6.738689e-09 1.486532e-05 1.072958e-04 4.552772e-11
+    ## [2,] 2.035350e-08 8.403591e-05 9.998393e-01 7.130532e-05 5.287355e-13
     ##              [,6]         [,7]         [,8]         [,9]        [,10]
-    ## [1,] 1.921820e-07 2.801314e-12 9.998441e-01 2.052107e-07 2.877850e-06
-    ## [2,] 5.400724e-08 2.413190e-07 1.503159e-10 1.185691e-06 1.127817e-10
+    ## [1,] 9.679722e-08 4.789386e-13 9.998690e-01 4.999659e-08 8.565845e-06
+    ## [2,] 8.086838e-08 4.036538e-07 2.312884e-10 4.896200e-06 5.992758e-11
 
 By default predict will return the output of the last Keras layer. In
 our case this is the probability for each class. You can also use
@@ -344,7 +386,7 @@ model %>%
 ```
 
     ##       loss   accuracy 
-    ## 0.08321846 0.97430003
+    ## 0.08755279 0.97420001
 
 Our model achieved \~90% accuracy on the test set.
 
@@ -394,51 +436,31 @@ sessionInfo()
     ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
     ## 
     ## attached base packages:
-    ##  [1] stats4    grid      parallel  stats     graphics  grDevices utils    
-    ##  [8] datasets  methods   base     
+    ## [1] parallel  stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] forcats_0.5.0               stringr_1.4.0              
-    ##  [3] dplyr_1.0.2                 purrr_0.3.4                
-    ##  [5] readr_1.4.0                 tidyr_1.1.2                
-    ##  [7] tibble_3.0.4                tidyverse_1.3.0            
-    ##  [9] keras_2.3.0.0               rtracklayer_1.48.0         
-    ## [11] GenomicAlignments_1.24.0    Rsamtools_2.4.0            
-    ## [13] Biostrings_2.56.0           XVector_0.28.0             
-    ## [15] SummarizedExperiment_1.18.2 DelayedArray_0.14.1        
-    ## [17] matrixStats_0.57.0          Biobase_2.48.0             
-    ## [19] GenomicRanges_1.40.0        GenomeInfoDb_1.24.2        
-    ## [21] IRanges_2.22.2              S4Vectors_0.26.1           
-    ## [23] BiocGenerics_0.34.0         RColorBrewer_1.1-2         
-    ## [25] EnvStats_2.3.1              reshape2_1.4.4             
-    ## [27] gtools_3.8.2                ggplot2_3.3.2              
-    ## [29] plyr_1.8.6                  optparse_1.6.6             
-    ## [31] magrittr_2.0.1             
+    ##  [1] forcats_0.5.0   stringr_1.4.0   dplyr_1.0.2     purrr_0.3.4    
+    ##  [5] readr_1.4.0     tidyr_1.1.2     tibble_3.0.4    ggplot2_3.3.2  
+    ##  [9] tidyverse_1.3.0 keras_2.3.0.0  
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] nlme_3.1-150           bitops_1.0-6           fs_1.5.0              
-    ##  [4] lubridate_1.7.9.2      httr_1.4.2             tools_4.0.0           
-    ##  [7] backports_1.1.10       utf8_1.1.4             R6_2.5.0              
-    ## [10] mgcv_1.8-33            DBI_1.1.0              colorspace_2.0-0      
-    ## [13] withr_2.3.0            tidyselect_1.1.0       compiler_4.0.0        
-    ## [16] cli_2.1.0              rvest_0.3.6            xml2_1.3.2            
-    ## [19] labeling_0.4.2         scales_1.1.1           rappdirs_0.3.1        
-    ## [22] tfruns_1.4             digest_0.6.27          rmarkdown_2.5         
-    ## [25] base64enc_0.1-3        pkgconfig_2.0.3        htmltools_0.5.0       
-    ## [28] dbplyr_2.0.0           rlang_0.4.8            readxl_1.3.1          
-    ## [31] rstudioapi_0.13        farver_2.0.3           generics_0.1.0        
-    ## [34] jsonlite_1.7.1         tensorflow_2.2.0       BiocParallel_1.22.0   
-    ## [37] RCurl_1.98-1.2         GenomeInfoDbData_1.2.3 Matrix_1.2-18         
-    ## [40] fansi_0.4.1            Rcpp_1.0.5             munsell_0.5.0         
-    ## [43] reticulate_1.18        lifecycle_0.2.0        stringi_1.5.3         
-    ## [46] whisker_0.4            yaml_2.2.1             zlibbioc_1.34.0       
-    ## [49] crayon_1.3.4           lattice_0.20-41        splines_4.0.0         
-    ## [52] haven_2.3.1            hms_0.5.3              zeallot_0.1.0         
-    ## [55] knitr_1.30             pillar_1.4.6           reprex_0.3.0          
-    ## [58] XML_3.99-0.5           glue_1.4.2             evaluate_0.14         
-    ## [61] modelr_0.1.8           vctrs_0.3.4            cellranger_1.1.0      
-    ## [64] gtable_0.3.0           getopt_1.20.3          assertthat_0.2.1      
-    ## [67] xfun_0.19              broom_0.7.2            ellipsis_0.3.1
+    ##  [1] Rcpp_1.0.5        lubridate_1.7.9.2 lattice_0.20-41   assertthat_0.2.1 
+    ##  [5] zeallot_0.1.0     digest_0.6.27     utf8_1.1.4        R6_2.5.0         
+    ##  [9] cellranger_1.1.0  backports_1.1.10  reprex_0.3.0      evaluate_0.14    
+    ## [13] httr_1.4.2        pillar_1.4.6      tfruns_1.4        rlang_0.4.8      
+    ## [17] readxl_1.3.1      rstudioapi_0.13   whisker_0.4       Matrix_1.2-18    
+    ## [21] reticulate_1.18   rmarkdown_2.5     splines_4.0.0     labeling_0.4.2   
+    ## [25] munsell_0.5.0     broom_0.7.2       compiler_4.0.0    modelr_0.1.8     
+    ## [29] xfun_0.19         pkgconfig_2.0.3   base64enc_0.1-3   mgcv_1.8-33      
+    ## [33] tensorflow_2.2.0  htmltools_0.5.0   tidyselect_1.1.0  fansi_0.4.1      
+    ## [37] crayon_1.3.4      dbplyr_2.0.0      withr_2.3.0       rappdirs_0.3.1   
+    ## [41] grid_4.0.0        nlme_3.1-150      jsonlite_1.7.1    gtable_0.3.0     
+    ## [45] lifecycle_0.2.0   DBI_1.1.0         magrittr_2.0.1    scales_1.1.1     
+    ## [49] cli_2.1.0         stringi_1.5.3     farver_2.0.3      fs_1.5.0         
+    ## [53] xml2_1.3.2        ellipsis_0.3.1    generics_0.1.0    vctrs_0.3.4      
+    ## [57] tools_4.0.0       glue_1.4.2        hms_0.5.3         yaml_2.2.1       
+    ## [61] colorspace_2.0-0  rvest_0.3.6       knitr_1.30        haven_2.3.1
 
 ## Time to knit
 
@@ -448,4 +470,4 @@ tDif <- tEnd - tStart
 cat("Time to knit notebook:", round(tDif, 2), units(tDif))
 ```
 
-    ## Time to knit notebook: 35.09 secs
+    ## Time to knit notebook: 27.46 secs
